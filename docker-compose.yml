@@ -1,0 +1,26 @@
+# Optional local stack for Django beside Go's Postgres.
+# Usage (from this directory, with Go db already up on host :5433):
+#   docker compose up --build
+#
+# Or join Go compose network and use host `db`.
+
+services:
+  django:
+    build: .
+    container_name: rahil-gallery-django
+    ports:
+      - "${DJANGO_PORT:-8000}:8000"
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-only-django-secret-change-me}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-true}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@host.docker.internal:5433/rahil_gallery?sslmode=disable}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev-docker-secret-change-in-production-min-32}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
