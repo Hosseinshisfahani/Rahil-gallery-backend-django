@@ -6,7 +6,7 @@ from commerce.models import Cart, CartItem
 
 
 class CartItemSerializer(serializers.ModelSerializer):
-    variant_id = serializers.UUIDField(source="variant.id", read_only=True)
+    variant_id = serializers.IntegerField(source="variant.id", read_only=True)
 
     class Meta:
         model = CartItem
@@ -38,7 +38,7 @@ class CartSerializer(serializers.ModelSerializer):
 
 
 class AddCartItemSerializer(serializers.Serializer):
-    variant_id = serializers.UUIDField()
+    variant_id = serializers.IntegerField()
     quantity = serializers.IntegerField(min_value=1, default=1)
     unit_price_snapshot = serializers.DecimalField(
         max_digits=14, decimal_places=2, min_value=Decimal("0")

@@ -44,9 +44,9 @@ class MyCartItemsView(APIView):
         data = ser.validated_data
 
         try:
-            variant = ProductVariant.objects.get(pk=data["variant_id"], is_active=True)
+            variant = ProductVariant.objects.get(pk=data["variant_id"])
         except ProductVariant.DoesNotExist:
-            return fail("not_found", "variant not found or inactive", status=404)
+            return fail("not_found", "variant not found", status=404)
 
         cart = get_or_create_active_cart(request.user)
         item, created = CartItem.objects.get_or_create(

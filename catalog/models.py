@@ -1,60 +1,123 @@
 import uuid
 
 from django.db import models
+from django.utils.translation import gettext_lazy as _
+
+
+class MaterialCategory(models.Model):
+    """Material family, stored as a tree (for example Precious Stones → Emerald)."""
+
+    name = models.CharField(_("name"), max_length=255)
+    slug = models.SlugField(
+        _("slug"),
+        max_length=255,
+        unique=True,
+        allow_unicode=True,
+    )
+    parent = models.ForeignKey(
+        "self",
+        verbose_name=_("parent"),
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="sub_materials",
+    )
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
+
+    class Meta:
+        verbose_name = _("material category")
+        verbose_name_plural = _("material categories")
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class ProductType(models.Model):
+    """Physical form of a piece (for example Ring, Bracelet, Crown)."""
+
+    name = models.CharField(_("name"), max_length=255)
+    slug = models.SlugField(
+        _("slug"),
+        max_length=255,
+        unique=True,
+        allow_unicode=True,
+    )
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
+
+    class Meta:
+        verbose_name = _("product type")
+        verbose_name_plural = _("product types")
+
+    def __str__(self) -> str:
+        return self.name
 
 
 class Product(models.Model):
-    """Go-owned catalog product — read-only stub for FKs."""
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    sku = models.CharField(max_length=64)
-    name = models.CharField(max_length=255)
-    slug = models.CharField(max_length=280)
-    status = models.CharField(max_length=20)
-    base_price = models.DecimalField(max_digits=14, decimal_places=2)
-    currency = models.CharField(max_length=3, default="IRR")
-    deleted_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    title = models.CharField(_("title"), max_length=255)
+    slug = models.SlugField(
+        _("slug"),
+        max_length=255,
+        unique=True,
+        allow_unicode=True,
+    )
+    sku = models.CharField(_("SKU"), max_length=64, unique=True)
+    is_active = models.BooleanField(_("is active"), default=True)
+    description = models.TextField(_("description"), blank=True)
+    material_category = models.ForeignKey(
+        MaterialCategory,
+        verbose_name=_("material category"),
+        on_delete=models.PROTECT,
+        related_name="products",
+    )
+    product_type = models.ForeignKey(
+        ProductType,
+        verbose_name=_("product type"),
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="products",
+    )
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
     class Meta:
-        managed = False
-        db_table = "products"
+        verbose_name = _("product")
+        verbose_name_plural = _("products")
 
     def __str__(self) -> str:
-        return self.name
+        return self.title
 
 
 class ProductVariant(models.Model):
-    """Go-owned product_variants — read-only stub for cart/order FKs."""
+    """Structural variant of a product. Price, stock, and specs come later."""
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product = models.ForeignKey(
         Product,
-        on_delete=models.DO_NOTHING,
-        db_column="product_id",
-        related_name="+",
+        verbose_name=_("product"),
+        on_delete=models.CASCADE,
+        related_name="variants",
     )
-    sku = models.CharField(max_length=64)
-    name = models.CharField(max_length=150)
-    size_label = models.CharField(max_length=50, null=True, blank=True)
-    color_label = models.CharField(max_length=50, null=True, blank=True)
-    price_adjustment = models.DecimalField(max_digits=14, decimal_places=2, default=0)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    sku = models.CharField(
+        _("SKU"),
+        max_length=50,
+        unique=True,
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
     class Meta:
-        managed = False
-        db_table = "product_variants"
+        verbose_name = _("product variant")
+        verbose_name_plural = _("product variants")
 
     def __str__(self) -> str:
-        return self.name
+        return self.sku or str(self.pk)
 
 
 class UserAddress(models.Model):
-    """Go-owned user_addresses — read-only stub for order FKs."""
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user_id = models.UUIDField()
     address_type = models.CharField(max_length=20)
@@ -74,8 +137,6 @@ class UserAddress(models.Model):
 
 
 class Customer(models.Model):
-    """Go-owned CRM customers — read-only stub."""
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)

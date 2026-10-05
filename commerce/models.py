@@ -104,9 +104,8 @@ class CartItem(models.Model):
     )
     variant = models.ForeignKey(
         ProductVariant,
-        on_delete=models.DO_NOTHING,
-        db_column="variant_id",
-        related_name="+",
+        on_delete=models.CASCADE,
+        related_name="cart_items",
     )
     quantity = models.PositiveIntegerField()
     unit_price_snapshot = models.DecimalField(max_digits=14, decimal_places=2)
@@ -180,9 +179,8 @@ class OrderItem(models.Model):
     )
     variant = models.ForeignKey(
         ProductVariant,
-        on_delete=models.DO_NOTHING,
-        db_column="variant_id",
-        related_name="+",
+        on_delete=models.PROTECT,
+        related_name="order_items",
     )
     product_name = models.CharField(max_length=255)
     variant_name = models.CharField(max_length=150)
