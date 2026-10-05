@@ -6,6 +6,8 @@ Sibling of [Rahil-gallery-backend-go](../Rahil-gallery-backend-go). Both share P
 
 The Next.js app in [Rahil-gallery-frontend](../Rahil-gallery-frontend) proxies commerce prefixes (`/api/v1/carts`, `/orders`, `/payments`, `/promotions`, `/coupons`) to this process (default `:8000`).
 
+Live server orchestration and deploys are managed via `~/source/rahil-stack`.
+
 ## Ownership
 
 See [docs/adr-table-ownership.md](docs/adr-table-ownership.md). `make check-ownership` blocks Django migrations that alter Go-owned tables.
